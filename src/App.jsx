@@ -13,10 +13,15 @@ import Study from './components/Study';
 import Reading from './components/Reading';
 import Guitar from './components/Guitar';
 import Culture from './components/Culture';
+import Settings from './components/Settings';
+import WeeklyPlanner from './components/WeeklyPlanner';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [data, setData] = useState(null);
+  const [isDark, setIsDark] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showPlanner, setShowPlanner] = useState(false);
 
   useEffect(() => {
     const loaded = loadData();
@@ -54,15 +59,33 @@ export default function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className={`min-h-screen transition-colors ${
+      isDark
+        ? 'bg-gradient-to-br from-slate-900 to-slate-800'
+        : 'bg-gradient-to-br from-blue-50 to-indigo-100'
+    }`}>
       {/* Top Navigation */}
-      <nav className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white shadow-lg sticky top-0 z-50">
+      <nav className={`${isDark ? 'bg-slate-900 border-b border-slate-700' : 'bg-gradient-to-r from-indigo-600 to-blue-500'} text-white shadow-lg sticky top-0 z-50`}>
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             ✨ Aryasu Yaz
           </h1>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-4 text-sm">
             <span>⭐ {data.stars} Yıldız</span>
+            <button
+              onClick={() => setShowPlanner(true)}
+              className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition text-sm font-semibold"
+              title="Haftalık Plan"
+            >
+              📅
+            </button>
+            <button
+              onClick={() => setShowSettings(true)}
+              className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition text-sm font-semibold"
+              title="Ayarlar"
+            >
+              ⚙️
+            </button>
           </div>
         </div>
       </nav>
@@ -105,6 +128,26 @@ export default function App() {
 
       {/* Bottom Padding for Navigation */}
       <div className="h-24"></div>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <Settings
+          data={data}
+          updateData={updateData}
+          onClose={() => setShowSettings(false)}
+          isDark={isDark}
+          setIsDark={setIsDark}
+        />
+      )}
+
+      {/* Weekly Planner Modal */}
+      {showPlanner && (
+        <WeeklyPlanner
+          data={data}
+          updateData={updateData}
+          onClose={() => setShowPlanner(false)}
+        />
+      )}
     </div>
   );
 }
