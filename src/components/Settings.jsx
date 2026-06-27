@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
-import { Settings as SettingsIcon, ChevronLeft, Sun, Moon } from 'lucide-react';
+import { ChevronLeft, Sun, Moon, ChevronRight } from 'lucide-react';
+
+const ACTIVITIES = ['Matematik', 'Oyun', 'Gitar', 'Müzik', 'Resim', 'Okuma', 'İngilizce', 'İspanyolca', 'Dinlenme', 'Yemek'];
+const TEMPLATE_NAMES = ['Antrenman', 'Londra', 'Okul', 'Boş'];
 
 export default function Settings({ data, updateData, onClose, isDark, setIsDark }) {
   const [currentTab, setCurrentTab] = useState('profile');
-
-  const grades = ['1. Sınıf', '2. Sınıf', '3. Sınıf', '4. Sınıf', '5. Sınıf', '6. Sınıf', '7. Sınıf', '8. Sınıf'];
-  const languages = ['İngilizce', 'İspanyolca', 'Almanca', 'Fransızca'];
+  const [selectedWeekStart, setSelectedWeekStart] = useState(new Date(2026, 5, 29)); // 29.06.2026
 
   const profile = data.profile || { grade: '6. Sınıf', lang1: 'İngilizce', lang2: 'İspanyolca' };
   const durations = data.durations || { book: 20, english: 30, spanish: 20, math: 30 };
+  const weeklyPlan = data.weeklyPlan || {};
+
+  const grades = ['1. Sınıf', '2. Sınıf', '3. Sınıf', '4. Sınıf', '5. Sınıf', '6. Sınıf', '7. Sınıf', '8. Sınıf'];
+  const languages = ['İngilizce', 'İspanyolca', 'Almanca', 'Fransızca'];
 
   const handleProfileUpdate = (field, value) => {
     const newProfile = { ...profile, [field]: value };
@@ -18,6 +23,38 @@ export default function Settings({ data, updateData, onClose, isDark, setIsDark 
   const handleDurationUpdate = (field, value) => {
     const newDurations = { ...durations, [field]: Math.max(5, parseInt(value) || 0) };
     updateData({ durations: newDurations });
+  };
+
+  // Get week days
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(selectedWeekStart);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+
+  const dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+
+  const handleWeekChange = (offset) => {
+    const newDate = new Date(selectedWeekStart);
+    newDate.setDate(newDate.getDate() + offset * 7);
+    setSelectedWeekStart(newDate);
+  };
+
+  const getTimeSlots = () => {
+    const slots = [];
+    for (let hour = 7; hour <= 22; hour++) {
+      slots.push(`${String(hour).padStart(2, '0')}:00`);
+    }
+    return slots;
+  };
+
+  const handleActivityUpdate = (dayIdx, timeSlot, activity) => {
+    const dateKey = weekDays[dayIdx].toISOString().split('T')[0];
+    if (!weeklyPlan[dateKey]) {
+      weeklyPlan[dateKey] = {};
+    }
+    weeklyPlan[dateKey][timeSlot] = activity;
+    updateData({ weeklyPlan });
   };
 
   return (
@@ -37,14 +74,14 @@ export default function Settings({ data, updateData, onClose, isDark, setIsDark 
           </div>
         </div>
 
-        {/* Content */}
-        <div className="max-w-6xl mx-auto p-4">
-          {/* Tabs */}
-          <div className="flex gap-2 mb-6 overflow-x-auto">
+        {/* Tabs */}
+        <div className="max-w-6xl mx-auto p-4 border-b border-slate-300 sticky top-16 bg-white">
+          <div className="flex gap-2 overflow-x-auto">
             {[
-              { id: 'profile', label: '👤 Profil', icon: '👤' },
-              { id: 'durations', label: '⏱️ Süreler', icon: '⏱️' },
-              { id: 'theme', label: '🎨 Tema', icon: '🎨' },
+              { id: 'profile', label: '👤 Profil' },
+              { id: 'lessons', label: '📚 Dersler' },
+              { id: 'planner', label: '📅 Haftalık Plan' },
+              { id: 'theme', label: '🎨 Tema' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -59,7 +96,10 @@ export default function Settings({ data, updateData, onClose, isDark, setIsDark 
               </button>
             ))}
           </div>
+        </div>
 
+        {/* Content */}
+        <div className="max-w-6xl mx-auto p-4">
           {/* Profile Tab */}
           {currentTab === 'profile' && (
             <div className="space-y-6">
@@ -84,16 +124,16 @@ export default function Settings({ data, updateData, onClose, isDark, setIsDark 
 
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      🌍 1. Yabancı Dil (İngilizce)
+                      🇬🇧 1. Yabancı Dil
                     </label>
                     <div className="bg-blue-50 p-3 rounded-lg">
-                      <p className="text-slate-700">İngilizce (varsayılan)</p>
+                      <p className="text-slate-700 font-semibold">İngilizce (Varsayılan)</p>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      🇪🇸 2. Yabancı Dil
+                      🌍 2. Yabancı Dil
                     </label>
                     <select
                       value={profile.lang2}
@@ -110,16 +150,16 @@ export default function Settings({ data, updateData, onClose, isDark, setIsDark 
             </div>
           )}
 
-          {/* Durations Tab */}
-          {currentTab === 'durations' && (
+          {/* Lessons Tab */}
+          {currentTab === 'lessons' && (
             <div className="space-y-6">
               <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-slate-800 mb-6">⏱️ Günlük Süreler</h2>
+                <h2 className="text-2xl font-bold text-slate-800 mb-6">📚 Derslerin Süresi</h2>
 
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-3">
-                      📖 Kitap Okuma Süresi
+                      📖 Kitap Okuma
                     </label>
                     <div className="flex items-center gap-4">
                       <input
@@ -139,7 +179,7 @@ export default function Settings({ data, updateData, onClose, isDark, setIsDark 
 
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-3">
-                      🇬🇧 İngilizce Ders Süresi
+                      🇬🇧 İngilizce
                     </label>
                     <div className="flex items-center gap-4">
                       <input
@@ -159,7 +199,7 @@ export default function Settings({ data, updateData, onClose, isDark, setIsDark 
 
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-3">
-                      🇪🇸 İspanyolca Ders Süresi
+                      🇪🇸 İspanyolca
                     </label>
                     <div className="flex items-center gap-4">
                       <input
@@ -179,7 +219,7 @@ export default function Settings({ data, updateData, onClose, isDark, setIsDark 
 
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-3">
-                      🧮 Matematik Ders Süresi
+                      🧮 Matematik
                     </label>
                     <div className="flex items-center gap-4">
                       <input
@@ -201,11 +241,70 @@ export default function Settings({ data, updateData, onClose, isDark, setIsDark 
             </div>
           )}
 
+          {/* Weekly Planner Tab */}
+          {currentTab === 'planner' && (
+            <div className="space-y-6">
+              {/* Week Navigation */}
+              <div className="flex items-center justify-between bg-white rounded-lg shadow-lg p-4">
+                <button
+                  onClick={() => handleWeekChange(-1)}
+                  className="p-2 hover:bg-slate-200 rounded-lg transition"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <h3 className="text-lg font-bold">
+                  {selectedWeekStart.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} - Haftalık Plan
+                </h3>
+                <button
+                  onClick={() => handleWeekChange(1)}
+                  className="p-2 hover:bg-slate-200 rounded-lg transition"
+                >
+                  <ChevronRight size={24} />
+                </button>
+              </div>
+
+              {/* Week Days */}
+              <div className="space-y-4">
+                {weekDays.map((day, dayIdx) => {
+                  const dateKey = day.toISOString().split('T')[0];
+                  const dayPlan = weeklyPlan[dateKey] || {};
+
+                  return (
+                    <div key={dayIdx} className="bg-white rounded-lg shadow-lg p-4 border-l-4 border-indigo-600">
+                      <h3 className="text-lg font-bold text-slate-800 mb-4">
+                        {dayNames[dayIdx]} - {day.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' })}
+                      </h3>
+
+                      {/* Time Slots */}
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {getTimeSlots().map(timeSlot => (
+                          <div key={timeSlot} className="flex gap-3 items-center bg-slate-50 p-3 rounded-lg">
+                            <span className="font-bold text-slate-700 w-16">{timeSlot}</span>
+                            <select
+                              value={dayPlan[timeSlot] || ''}
+                              onChange={(e) => handleActivityUpdate(dayIdx, timeSlot, e.target.value)}
+                              className="flex-1 px-3 py-1 border border-slate-300 rounded-lg font-semibold"
+                            >
+                              <option value="">-- Seç --</option>
+                              {ACTIVITIES.map(activity => (
+                                <option key={activity} value={activity}>{activity}</option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Theme Tab */}
           {currentTab === 'theme' && (
             <div className="space-y-6">
               <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-slate-800 mb-6">🎨 Tema</h2>
+                <h2 className="text-2xl font-bold text-slate-800 mb-6">🎨 Tema Seç</h2>
 
                 <div className="grid grid-cols-2 gap-4">
                   <button
@@ -231,12 +330,6 @@ export default function Settings({ data, updateData, onClose, isDark, setIsDark 
                     <Moon size={32} className="mx-auto mb-2 text-slate-600" />
                     <p className="font-bold text-slate-800">🌙 Koyu Mod</p>
                   </button>
-                </div>
-
-                <div className="mt-8 p-4 bg-slate-100 rounded-lg">
-                  <p className="text-sm text-slate-600">
-                    💡 Koyu mod göz yorgunluğunu azaltır ve akşam saatlerinde daha rahat görüş sağlar.
-                  </p>
                 </div>
               </div>
             </div>

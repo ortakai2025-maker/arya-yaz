@@ -14,14 +14,12 @@ import Reading from './components/Reading';
 import Guitar from './components/Guitar';
 import Culture from './components/Culture';
 import Settings from './components/Settings';
-import WeeklyPlanner from './components/WeeklyPlanner';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [data, setData] = useState(null);
   const [isDark, setIsDark] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [showPlanner, setShowPlanner] = useState(false);
 
   useEffect(() => {
     const loaded = loadData();
@@ -73,16 +71,9 @@ export default function App() {
           <div className="flex items-center gap-4 text-sm">
             <span>⭐ {data.stars} Yıldız</span>
             <button
-              onClick={() => setShowPlanner(true)}
-              className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition text-sm font-semibold"
-              title="Haftalık Plan"
-            >
-              📅
-            </button>
-            <button
               onClick={() => setShowSettings(true)}
               className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition text-sm font-semibold"
-              title="Ayarlar"
+              title="Ayarlar & Haftalık Plan"
             >
               ⚙️
             </button>
@@ -137,15 +128,6 @@ export default function App() {
           onClose={() => setShowSettings(false)}
           isDark={isDark}
           setIsDark={setIsDark}
-        />
-      )}
-
-      {/* Weekly Planner Modal */}
-      {showPlanner && (
-        <WeeklyPlanner
-          data={data}
-          updateData={updateData}
-          onClose={() => setShowPlanner(false)}
         />
       )}
     </div>
